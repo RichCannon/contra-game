@@ -3,7 +3,7 @@ import Game from "./Game";
 
 const init = async () => {
   const pixiApp = new PIXI.Application();
-  await pixiApp.init({ width: 800, height: 600 });
+  await pixiApp.init({ width: 1280, height: 1024 });
 
   const appEl = document.getElementById("app");
 

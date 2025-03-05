@@ -1,17 +1,18 @@
 import { Application, Container, Renderer } from "pixi.js";
-import Hero from "./entities/Hero";
+import Hero, { HERO_STATES, IHeroRect } from "./entities/Hero";
 import { Keyboard } from "./engine/Keyboard";
 import PlatformFactory from "./entities/Platforms/PlatformFactory";
+import Platform, { PlatformType } from "./entities/Platforms/Platform";
 
 export default class Game {
   #pixiApp: Application<Renderer>;
   #hero: Hero;
   #platformFactory: PlatformFactory;
 
-  constructor(pixiApp: Application<Renderer>) {
+  private setKeys() {
     Keyboard.init();
 
-    Keyboard.addKeyDownListener("move", (e, state) => {
+    Keyboard.addKeyDownListener("move", (_, state) => {
       if (state.get("ArrowLeft")) {
         this.#hero.startLeftMove();
       }
@@ -19,7 +20,12 @@ export default class Game {
         this.#hero.startRightMove();
       }
 
-      if (state.get("ArrowUp")) {
+      if (state.get("KeyX")) {
+        if (state.get("ArrowDown")) {
+          console.log("JUMP DOWN");
+          this.#hero.jumpDown();
+          return;
+        }
         this.#hero.jump();
       }
     });
@@ -32,7 +38,9 @@ export default class Game {
         this.#hero.stopMoveLeft();
       }
     });
+  }
 
+  constructor(pixiApp: Application<Renderer>) {
     this.#pixiApp = pixiApp;
 
     this.#platformFactory = new PlatformFactory(pixiApp);
@@ -42,12 +50,23 @@ export default class Game {
     this.#hero.y = 100;
     this.#pixiApp.stage.addChild(this.#hero);
 
-    this.#platformFactory.createPlatform(50, 400);
-    this.#platformFactory.createPlatform(200, 450);
-    this.#platformFactory.createPlatform(400, 400);
+    this.#platformFactory.createPlatform(100, 400);
+    this.#platformFactory.createPlatform(300, 400);
+    this.#platformFactory.createPlatform(500, 400);
+    this.#platformFactory.createPlatform(700, 400);
+    this.#platformFactory.createPlatform(900, 400);
+
+    this.#platformFactory.createPlatform(300, 550);
+
+    this.#platformFactory.createBox(0, 738);
+    this.#platformFactory.createBox(200, 738);
+
+    this.#platformFactory.createPlatform(400, 708, true);
+
+    this.setKeys();
   }
 
-  private checkCollision(entity: Container, area: Container) {
+  private checkCollision(entity: IHeroRect, area: Container) {
     const isVertCollision =
       entity.y < area.y + area.height && entity.y + entity.height > area.y;
     const isHorCollision =
@@ -56,32 +75,56 @@ export default class Game {
   }
 
   getPlatformCollision(
-    character: Container,
-    platform: Container,
+    character: Hero,
+    platform: Platform,
     prevPoint: { x: number; y: number }
+  ) {
+    const collision = this.getOrientCollision(
+      character.heroRect,
+      platform,
+      prevPoint
+    );
+
+    // Vertical collision
+    if (collision && collision.vertical) {
+      character.y = prevPoint.y;
+    }
+
+    // Horiznotall collision in case of BOX type of platform
+    if (
+      collision &&
+      collision.horizontal &&
+      platform.type === PlatformType.BOX
+    ) {
+      character.x = prevPoint.x;
+    }
+
+    return collision;
+  }
+  getOrientCollision(
+    aaRect: IHeroRect,
+    bbRect: Container,
+    aaPrevPoint: { x: number; y: number }
   ) {
     const collision = {
       horizontal: false,
       vertical: false,
     };
 
-    const isCollide = this.checkCollision(this.#hero, platform);
+    const isCollide = this.checkCollision(this.#hero, bbRect);
 
     if (!isCollide) {
       return false;
     }
 
-    const currentY = character.y;
-    character.y = prevPoint.y;
-    const isYCollide = this.checkCollision(character, platform);
+    aaRect.y = aaPrevPoint.y;
+    const isYCollide = this.checkCollision(aaRect, bbRect);
 
     if (!isYCollide) {
       collision.vertical = true;
       return collision;
     }
 
-    character.y = currentY;
-    character.x = prevPoint.x;
     collision.horizontal = true;
     return collision;
   }
@@ -91,17 +134,28 @@ export default class Game {
       y: this.#hero.y,
       x: this.#hero.x,
     };
+
     this.#hero.update();
 
     for (let i = 0; i < this.#platformFactory.platforms.length; i++) {
       const platform = this.#platformFactory.platforms[i];
+      if (
+        this.#hero.heroState.get(HERO_STATES.JUMP) &&
+        platform.type !== PlatformType.BOX
+      ) {
+        continue;
+      }
       const collision = this.getPlatformCollision(
         this.#hero,
         platform,
         prevPoint
       );
+      if (collision && collision.horizontal && platform.isClimable) {
+        this.#hero.stay(platform.y);
+        continue;
+      }
       if (collision && collision.vertical) {
-        this.#hero.stay();
+        this.#hero.stay(platform.y);
       }
     }
   }
