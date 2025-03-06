@@ -32,7 +32,7 @@ export default class Platform extends Container {
     // view.fill(0xffff55);
     this.platform.setStrokeStyle({
       color: 0xff99ff,
-      width: 5,
+      width: 1,
     });
     if (this.#type === PlatformType.BOX) {
       this.platform.lineTo(200, 30);

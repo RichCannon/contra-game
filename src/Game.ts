@@ -1,8 +1,9 @@
 import { Application, Container, Renderer } from "pixi.js";
-import Hero, { HERO_STATES, IHeroRect } from "./entities/Hero";
+import Hero, { HERO_STATES } from "./entities/Hero/Hero";
 import { Keyboard } from "./engine/Keyboard";
 import PlatformFactory from "./entities/Platforms/PlatformFactory";
 import Platform, { PlatformType } from "./entities/Platforms/Platform";
+import { IHeroCollisionBox } from "./entities/Hero/HeroView";
 
 export default class Game {
   #pixiApp: Application<Renderer>;
@@ -12,30 +13,52 @@ export default class Game {
   private setKeys() {
     Keyboard.init();
 
-    Keyboard.addKeyDownListener("move", (_, state) => {
+    Keyboard.addKeyDownListener("move", (e, state) => {
       if (state.get("ArrowLeft")) {
         this.#hero.startLeftMove();
       }
       if (state.get("ArrowRight")) {
         this.#hero.startRightMove();
       }
+      if (state.get("ArrowDown")) {
+      }
+      if (state.get("ArrowUp")) {
+      }
 
       if (state.get("KeyX")) {
-        if (state.get("ArrowDown")) {
-          console.log("JUMP DOWN");
+        if (
+          state.get("ArrowDown") &&
+          !(state.get("ArrowLeft") || state.get("ArrowRight"))
+        ) {
           this.#hero.jumpDown();
           return;
         }
         this.#hero.jump();
       }
+      if (
+        e.code === "ArrowDown" ||
+        e.code === "ArrowUp" ||
+        e.code === "ArrowLeft" ||
+        e.code === "ArrowRight"
+      ) {
+        this.#hero.setView(state);
+      }
     });
 
-    Keyboard.addKeyUpListener("stopMove", (_, state) => {
+    Keyboard.addKeyUpListener("stopMove", (e, state) => {
       if (!state.get("ArrowRight")) {
         this.#hero.stopMoveRight();
       }
       if (!state.get("ArrowLeft")) {
         this.#hero.stopMoveLeft();
+      }
+      if (
+        e.code === "ArrowDown" ||
+        e.code === "ArrowUp" ||
+        e.code === "ArrowLeft" ||
+        e.code === "ArrowRight"
+      ) {
+        this.#hero.setView(state);
       }
     });
   }
@@ -45,10 +68,10 @@ export default class Game {
 
     this.#platformFactory = new PlatformFactory(pixiApp);
 
-    this.#hero = new Hero();
+    this.#hero = new Hero(this.#pixiApp.stage);
     this.#hero.x = 100;
     this.#hero.y = 100;
-    this.#pixiApp.stage.addChild(this.#hero);
+    // this.#pixiApp.stage.addChild(this.#hero);
 
     this.#platformFactory.createPlatform(100, 400);
     this.#platformFactory.createPlatform(300, 400);
@@ -66,7 +89,7 @@ export default class Game {
     this.setKeys();
   }
 
-  private checkCollision(entity: IHeroRect, area: Container) {
+  private checkCollision(entity: IHeroCollisionBox, area: Container) {
     const isVertCollision =
       entity.y < area.y + area.height && entity.y + entity.height > area.y;
     const isHorCollision =
@@ -80,15 +103,15 @@ export default class Game {
     prevPoint: { x: number; y: number }
   ) {
     const collision = this.getOrientCollision(
-      character.heroRect,
+      character.collisionBox,
       platform,
       prevPoint
     );
 
     // Vertical collision
-    if (collision && collision.vertical) {
-      character.y = prevPoint.y;
-    }
+    // if (collision && collision.vertical) {
+    //   character.y = prevPoint.y;
+    // }
 
     // Horiznotall collision in case of BOX type of platform
     if (
@@ -102,7 +125,7 @@ export default class Game {
     return collision;
   }
   getOrientCollision(
-    aaRect: IHeroRect,
+    aaRect: IHeroCollisionBox,
     bbRect: Container,
     aaPrevPoint: { x: number; y: number }
   ) {
@@ -111,7 +134,7 @@ export default class Game {
       vertical: false,
     };
 
-    const isCollide = this.checkCollision(this.#hero, bbRect);
+    const isCollide = this.checkCollision(this.#hero.collisionBox, bbRect);
 
     if (!isCollide) {
       return false;
@@ -131,8 +154,8 @@ export default class Game {
 
   update() {
     const prevPoint = {
-      y: this.#hero.y,
-      x: this.#hero.x,
+      y: this.#hero.collisionBox.y,
+      x: this.#hero.collisionBox.x,
     };
 
     this.#hero.update();
