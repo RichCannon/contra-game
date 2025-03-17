@@ -1,27 +1,21 @@
-import { Container, ContainerChild, Graphics } from "pixi.js";
 import HeroView from "./HeroView";
+import HeroWeaponUnit from "./HeroWeaponUnit";
+import {
+  ENTITIE_TYPES,
+  ENTITY_STATES,
+  IEntity,
+} from "../../types/entities.types";
+import GravityManager from "../../engine/GravityManager";
+import Entity from "../Entity";
+import { Graphics } from "pixi.js";
 
-export const enum HERO_STATES {
-  STAY,
-  JUMP,
-  JUMP_DOWN,
-  IN_AIR,
-}
-
-let showLog = true;
-
-// export interface IHeroBounds {
-//   width: number;
-//   height: number;
-// }
-
-export default class Hero {
-  #G = 0.2; // Constant acceleration
+export default class Hero extends Entity<HeroView> implements IEntity {
   #Vx = 0; // Velocity OX
   #Vy = 0; // Velocity OY
   #MAX_V = 3;
   #JUMP_FORCE = 9;
-  #view: HeroView;
+  #heroWeaponUnit: HeroWeaponUnit;
+  #collisionBoxView = new Graphics();
 
   #movement = {
     xL: 0,
@@ -29,104 +23,113 @@ export default class Hero {
     y: 0,
   };
 
-  #state = new Map<HERO_STATES, boolean>();
+  #state = new Map<ENTITY_STATES, boolean>();
 
   #isLay = false;
   #isUp = false;
 
-  get heroState() {
+  readonly type: ENTITIE_TYPES = ENTITIE_TYPES.HERO;
+
+  get state() {
     return this.#state;
   }
 
-  constructor(stage: Container<ContainerChild>) {
-    this.#view = new HeroView();
-    stage.addChild(this.#view);
+  get bulletContext() {
+    return this.#heroWeaponUnit.bulletContext;
+  }
+  constructor(view: HeroView) {
+    super(view);
+    this.gravitable = true;
 
-    this.#state.set(HERO_STATES.JUMP, true);
-    this.#view.showJump();
-  }
+    this.#heroWeaponUnit = new HeroWeaponUnit(this._view);
 
-  get collisionBox() {
-    return this.#view.collisionBox;
-  }
+    this.#state.set(ENTITY_STATES.JUMP, true);
+    this._view.showJump();
 
-  get x() {
-    return this.#view.x;
-  }
-  set x(value: number) {
-    this.#view.x = value;
-  }
-  get y() {
-    return this.#view.y;
-  }
-  set y(value: number) {
-    this.#view.y = value;
+    this.#collisionBoxView.rect(
+      0,
+      0,
+      this.collisionBox.width,
+      this.collisionBox.height
+    );
+    this.#collisionBoxView.setStrokeStyle({
+      width: 1,
+      color: "cyan",
+    });
+    this.#collisionBoxView.stroke();
+    window.worldContainer.addChild(this.#collisionBoxView);
   }
 
   update() {
+    this.superUpdate();
+
     if (this.#Vy > 0) {
-      if (this.#state.get(HERO_STATES.JUMP)) {
-        this.#state.set(HERO_STATES.JUMP, false);
+      if (this.#state.get(ENTITY_STATES.JUMP)) {
+        this.#state.set(ENTITY_STATES.JUMP, false);
       }
       if (
-        !this.#state.get(HERO_STATES.JUMP) &&
-        this.#state.get(HERO_STATES.IN_AIR) &&
-        this.#view.heroSpriteState !== "jump"
+        !this.#state.get(ENTITY_STATES.JUMP) &&
+        this.#state.get(ENTITY_STATES.IN_AIR) &&
+        this._view.heroSpriteState !== "jump"
       ) {
-        this.#view.showFall();
+        this._view.showFall();
       }
     }
 
     // FIXME: Might be a problem if we are goinf to introduce moving vertically platforms
     if (this.#Vy !== 0) {
-      this.#state.set(HERO_STATES.IN_AIR, true);
+      this.#state.set(ENTITY_STATES.IN_AIR, true);
     }
 
     this.#Vx = (this.#movement.xL + this.#movement.xR) * this.#MAX_V;
     this.x += this.#Vx;
 
-    this.#Vy += this.#G;
+    this.#Vy = GravityManager.applyGravity(this.#Vy);
     this.y += this.#Vy;
+
+    this.#collisionBoxView.x = this.x;
+    this.#collisionBoxView.y = this.y;
+    this.#collisionBoxView.width = this.collisionBox.width;
+    this.#collisionBoxView.height = this.collisionBox.height;
   }
 
   stay(platformY: number) {
     this.#Vy = 0;
     this.y = platformY - this.collisionBox.height;
-    // console.log("stay");
-
-    // this.#state.set(HERO_STATES.JUMP, false);
     if (
-      this.#state.get(HERO_STATES.IN_AIR) ||
-      this.#state.get(HERO_STATES.JUMP)
+      this.#state.get(ENTITY_STATES.IN_AIR) ||
+      this.#state.get(ENTITY_STATES.JUMP)
     ) {
       const buttonState = new Map<string, boolean>();
       buttonState.set("ArrowLeft", this.#movement.xL === -1);
       buttonState.set("ArrowRight", this.#movement.xR === 1);
       buttonState.set("ArrowDown", this.#isLay);
       buttonState.set("ArrowUp", this.#isUp);
-      this.#state.set(HERO_STATES.IN_AIR, false);
+      this.#state.set(ENTITY_STATES.IN_AIR, false);
       this.setView(buttonState);
     }
 
-    this.#state.set(HERO_STATES.STAY, true);
-    this.#state.set(HERO_STATES.IN_AIR, false);
-    this.#state.set(HERO_STATES.JUMP_DOWN, false);
+    this.#state.set(ENTITY_STATES.STAY, true);
+    this.#state.set(ENTITY_STATES.IN_AIR, false);
+    this.#state.set(ENTITY_STATES.JUMP_DOWN, false);
   }
 
   jump() {
-    if (this.#state.get(HERO_STATES.IN_AIR)) return;
-    this.#state.set(HERO_STATES.STAY, false);
-    this.#state.set(HERO_STATES.IN_AIR, true);
-    this.#state.set(HERO_STATES.JUMP, true);
+    if (this.#state.get(ENTITY_STATES.IN_AIR)) return;
+    this.#state.set(ENTITY_STATES.STAY, false);
+    this.#state.set(ENTITY_STATES.IN_AIR, true);
+    this.#state.set(ENTITY_STATES.JUMP, true);
     this.#Vy -= this.#JUMP_FORCE;
-    this.#view.showJump();
+    this._view.showJump();
   }
 
   jumpDown() {
-    this.#state.set(HERO_STATES.JUMP, true);
-    this.#state.set(HERO_STATES.JUMP_DOWN, true);
-    this.#state.set(HERO_STATES.IN_AIR, true);
-    this.#view.showFall();
+    if (!this.#state.get(ENTITY_STATES.IN_AIR)) {
+      this._view.showFall();
+    }
+    this.#state.set(ENTITY_STATES.JUMP, true);
+    this.#state.set(ENTITY_STATES.JUMP_DOWN, true);
+    this.#state.set(ENTITY_STATES.IN_AIR, true);
   }
 
   startLeftMove() {
@@ -149,40 +152,42 @@ export default class Hero {
     this.#isUp = state.get("ArrowUp") || false;
 
     if (!!movementDirection) {
-      this.#view.flip(movementDirection as -1 | 1);
+      this._view.flip(movementDirection as -1 | 1);
     }
 
+    this.#heroWeaponUnit.setBulletAngle(state, this.#state);
+
     if (
-      this.#state.get(HERO_STATES.IN_AIR) ||
-      this.#state.get(HERO_STATES.JUMP)
+      this.#state.get(ENTITY_STATES.IN_AIR) ||
+      this.#state.get(ENTITY_STATES.JUMP)
     ) {
       return;
     }
 
     if (state.get("ArrowLeft") || state.get("ArrowRight")) {
       if (state.get("ArrowUp")) {
-        this.#view.showRunUp();
+        this._view.showRunUp();
       } else if (state.get("ArrowDown")) {
-        this.#view.showRunDown();
+        this._view.showRunDown();
       } else {
-        this.#view.showRun();
+        this._view.showRun();
       }
     } else {
       if (state.get("ArrowUp")) {
-        this.#view.showStayUp();
+        this._view.showStayUp();
       } else if (state.get("ArrowDown")) {
-        this.#view.showLay();
+        this._view.showLay();
       } else {
-        this.#view.showStay();
+        this._view.showStay();
       }
     }
 
-    if (state.get("ArrowDown")) {
-    }
-    if (state.get("ArrowUp")) {
-    }
+    // if (state.get("ArrowDown")) {
+    // }
+    // if (state.get("ArrowUp")) {
+    // }
 
-    if (state.get("KeyX")) {
-    }
+    // if (state.get("KeyX")) {
+    // }
   }
 }

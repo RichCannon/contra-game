@@ -11,12 +11,6 @@ const init = async () => {
 
   pixiApp.ticker.add(game.update, game);
   appEl?.appendChild(pixiApp.canvas);
-
-  // const view = new PIXI.Graphics();
-  // view.rect(0, 0, 100, 100);
-  // view.fill(0xff0000);
-
-  // _pixiApp.stage.addChild(view);
 };
 
 init();

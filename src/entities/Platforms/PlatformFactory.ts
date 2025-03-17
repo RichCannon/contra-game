@@ -1,8 +1,8 @@
-import { Application, Renderer } from "pixi.js";
+import { Container } from "pixi.js";
 import Platform, { PlatformType } from "./Platform";
 
 export default class PlatformFactory {
-  #pixiApp: Application<Renderer>;
+  #worldContainer: Container;
 
   #platformsArr: Platform[] = [];
 
@@ -18,8 +18,8 @@ export default class PlatformFactory {
     this.#platformsArr = [...this.#platformsArr, newPlatforms];
   }
 
-  constructor(pixiApp: Application<Renderer>) {
-    this.#pixiApp = pixiApp;
+  constructor(worldContainer: Container) {
+    this.#worldContainer = worldContainer;
   }
 
   public createPlatform(x: number, y: number, isClimable?: boolean) {
@@ -27,7 +27,7 @@ export default class PlatformFactory {
     platform.x = x;
     platform.y = y;
 
-    this.#pixiApp.stage.addChild(platform);
+    this.#worldContainer.addChild(platform);
     this.addPlatform(platform);
   }
   public createBox(x: number, y: number) {
@@ -35,7 +35,7 @@ export default class PlatformFactory {
     box.x = x;
     box.y = y;
 
-    this.#pixiApp.stage.addChild(box);
+    this.#worldContainer.addChild(box);
     this.addPlatform(box);
   }
 }

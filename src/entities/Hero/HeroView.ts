@@ -1,11 +1,5 @@
 import { Container, Graphics } from "pixi.js";
-
-export interface IHeroCollisionBox {
-  width: number;
-  height: number;
-  x: number;
-  y: number;
-}
+import EntityView from "../EntityView";
 
 export type HeroViewStates =
   | "stay"
@@ -17,24 +11,11 @@ export type HeroViewStates =
   | "jump"
   | "fall";
 
-export default class HeroView extends Container {
+export default class HeroView extends EntityView {
   #bounds = {
     width: 0,
     height: 0,
   };
-
-  #collisionBox: IHeroCollisionBox = {
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  };
-
-  get collisionBox() {
-    this.#collisionBox.x = this.x;
-    this.#collisionBox.y = this.y;
-    return this.#collisionBox;
-  }
 
   // State machine
   #stm = {
@@ -42,22 +23,40 @@ export default class HeroView extends Container {
     states: {} as Record<HeroViewStates, Graphics>,
   };
 
+  #bulletPointShift = {
+    x: 0,
+    y: 0,
+  };
+
+  get bulletPointShift() {
+    return this.#bulletPointShift;
+  }
+
   get heroSpriteState() {
     return this.#stm.currentState;
   }
 
-  #rootNode: Container;
+  // Return scale of the hero not the container where here is placed
+  get isFlipped() {
+    return this._rootNode.scale.x === -1;
+  }
+
+  #setBulletPointShift(x: number, y: number) {
+    this.#bulletPointShift.x =
+      (x + this._rootNode.pivot.x * this._rootNode.scale.x) *
+      this._rootNode.scale.x;
+    this.#bulletPointShift.y = y;
+  }
 
   constructor() {
     super();
-    this.#rootNode = this.#createNodeStructure();
 
     this.#bounds.width = 20;
     this.#bounds.height = 90;
-    this.#collisionBox.width = this.#bounds.width;
-    this.#collisionBox.height = this.#bounds.height;
-    this.#rootNode.pivot.x = this.#collisionBox.width * 0.5;
-    this.#rootNode.x = this.#collisionBox.width * 0.5;
+    this._collisionBox.width = this.#bounds.width;
+    this._collisionBox.height = this.#bounds.height;
+    this._rootNode.pivot.x = this._collisionBox.width * 0.5;
+    this._rootNode.x = this._collisionBox.width * 0.5;
 
     // const view = new Graphics();
     // view.rect(0, 0, this.#bounds.width, this.#bounds.height);
@@ -83,20 +82,14 @@ export default class HeroView extends Container {
     this.#stm.states.fall = this.#getFallImage();
 
     for (const key in this.#stm.states) {
-      this.#rootNode.addChild(this.#stm.states[key as HeroViewStates]);
+      this._rootNode.addChild(this.#stm.states[key as HeroViewStates]);
     }
 
-    this.addChild(this.#rootNode);
+    this.addChild(this._rootNode);
 
     this.#toState("stay");
 
-    // this.#rootNode.scale.x *= -1;
-  }
-
-  #createNodeStructure() {
-    const rootNode = new Container();
-    this.addChild(rootNode);
-    return rootNode;
+    // this._rootNode.scale.x *= -1;
   }
 
   #toState(state: HeroViewStates) {
@@ -115,31 +108,39 @@ export default class HeroView extends Container {
 
   showStay() {
     this.#toState("stay");
+    this.#setBulletPointShift(65, 30);
   }
   showStayUp() {
     this.#toState("stayUp");
+    this.#setBulletPointShift(-2, -40);
   }
   showRun() {
     this.#toState("run");
+    this.#setBulletPointShift(65, 30);
   }
   showRunUp() {
     this.#toState("runUp");
+    this.#setBulletPointShift(40, -20);
   }
   showRunDown() {
     this.#toState("runDown");
+    this.#setBulletPointShift(20, 55);
   }
   showLay() {
     this.#toState("lay");
+    this.#setBulletPointShift(65, 70);
   }
   showJump() {
     this.#toState("jump");
+    this.#setBulletPointShift(0, 30);
   }
   showFall() {
     this.#toState("fall");
+    this.#setBulletPointShift(-2, 40);
   }
 
   flip(direction: -1 | 1) {
-    this.#rootNode.scale.x = direction;
+    this._rootNode.scale.x = direction;
   }
 
   #getStayImage() {
@@ -215,7 +216,7 @@ export default class HeroView extends Container {
 
     view.rect(0, 0, this.#bounds.height, this.#bounds.width);
     view.rect(90, 0, 40, 5);
-    view.x += 45;
+    view.x -= 45;
     view.y += 70;
     view.setStrokeStyle({
       color: 0xff9900,
