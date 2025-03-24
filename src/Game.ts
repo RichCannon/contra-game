@@ -59,7 +59,9 @@ export default class Game {
 
     this.#sceneFactory = new SceneFactory(
       this.#platformFactory,
-      this.#enemiesFactory
+      this.#enemiesFactory,
+      this.#hero,
+      this.#entities
     );
 
     this.#sceneFactory.createScene();
@@ -235,13 +237,13 @@ export default class Game {
     for (let i = 0; i < this.#sceneFactory.platforms.length; i++) {
       const platform = this.#sceneFactory.platforms[i];
       if (
-        !(
-          entity.state.get(ENTITY_STATES.JUMP) &&
-          platform.type !== ENTITIE_TYPES.BOX
-        )
+        (entity.state.get(ENTITY_STATES.JUMP) &&
+          platform.type !== ENTITIE_TYPES.BOX) ||
+        platform.isDead
       ) {
-        this.#checkPlatformCollision(entity, platform);
+        continue;
       }
+      this.#checkPlatformCollision(entity, platform);
     }
 
     if (

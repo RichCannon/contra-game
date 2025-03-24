@@ -3,6 +3,7 @@ import type World from "../../WorldContainer";
 import Platform from "./Platform";
 import PlatformView from "./PlatformView";
 import { ENTITIE_TYPES } from "../../types/entities.types";
+import BridgePlatform from "./BridgePlatform";
 
 export default class PlatformFactory {
   #worldContainer: World;
@@ -150,11 +151,12 @@ export default class PlatformFactory {
     );
     view.addChild(skin);
 
-    const platform = new Platform(view);
+    const platform = new BridgePlatform(view);
     platform.x = x;
     platform.y = y;
 
     this.#worldContainer.background.addChild(view);
     this.addPlatform(platform);
+    return platform;
   }
 }
