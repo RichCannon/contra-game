@@ -7,7 +7,6 @@ import {
 } from "../../types/entities.types";
 import GravityManager from "../../engine/GravityManager";
 import Entity from "../Entity";
-import { Graphics } from "pixi.js";
 
 export default class Hero extends Entity<HeroView> implements IEntity {
   #Vx = 0; // Velocity OX
@@ -15,7 +14,6 @@ export default class Hero extends Entity<HeroView> implements IEntity {
   #MAX_V = 3;
   #JUMP_FORCE = 9;
   #heroWeaponUnit: HeroWeaponUnit;
-  #collisionBoxView = new Graphics();
 
   #movement = {
     xL: 0,
@@ -40,24 +38,15 @@ export default class Hero extends Entity<HeroView> implements IEntity {
   constructor(view: HeroView) {
     super(view);
     this.gravitable = true;
+    this.isActive = true;
+
+    // TEST: Should be 1 health. Value below only for testing purposes
+    this.health = 9999;
 
     this.#heroWeaponUnit = new HeroWeaponUnit(this._view);
 
     this.#state.set(ENTITY_STATES.JUMP, true);
     this._view.showJump();
-
-    this.#collisionBoxView.rect(
-      0,
-      0,
-      this.collisionBox.width,
-      this.collisionBox.height
-    );
-    this.#collisionBoxView.setStrokeStyle({
-      width: 1,
-      color: "cyan",
-    });
-    this.#collisionBoxView.stroke();
-    window.worldContainer.addChild(this.#collisionBoxView);
   }
 
   update() {
@@ -86,11 +75,6 @@ export default class Hero extends Entity<HeroView> implements IEntity {
 
     this.#Vy = GravityManager.applyGravity(this.#Vy);
     this.y += this.#Vy;
-
-    this.#collisionBoxView.x = this.x;
-    this.#collisionBoxView.y = this.y;
-    this.#collisionBoxView.width = this.collisionBox.width;
-    this.#collisionBoxView.height = this.collisionBox.height;
   }
 
   stay(platformY: number) {

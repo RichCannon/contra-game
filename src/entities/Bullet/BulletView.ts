@@ -5,8 +5,10 @@ export default class BulletView extends EntityView {
   constructor() {
     super();
     const view = new Graphics();
-    this.collisionBox.width = 5;
-    this.collisionBox.height = 5;
+    this._collisionBox.width = 5;
+    this._collisionBox.height = 5;
+    this._hitBox.width = this._collisionBox.width;
+    this._hitBox.height = this._collisionBox.height;
 
     view.rect(0, 0, this.collisionBox.width, this.collisionBox.height);
     view.setStrokeStyle({

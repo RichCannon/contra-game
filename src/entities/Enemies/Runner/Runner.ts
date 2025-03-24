@@ -6,6 +6,7 @@ import {
 } from "../../../types/entities.types";
 import GravityManager from "../../../engine/GravityManager";
 import Entity from "../../Entity";
+import Hero from "../../Hero/Hero";
 
 let showLog = true;
 
@@ -19,6 +20,7 @@ export default class Runner extends Entity<RunnerView> implements IEntity {
   #Vy = 0; // Velocity OY
   #MAX_V = 3;
   #JUMP_FORCE = 9;
+  #target: Hero;
 
   #movement = {
     xL: 0,
@@ -35,6 +37,8 @@ export default class Runner extends Entity<RunnerView> implements IEntity {
 
   readonly type: ENTITIE_TYPES = ENTITIE_TYPES.ENEMY;
 
+  jumpBehaviourKoef = 0.4;
+
   get prevPoint() {
     return this.#prevPoint;
   }
@@ -43,9 +47,10 @@ export default class Runner extends Entity<RunnerView> implements IEntity {
     return this.#state;
   }
 
-  constructor(view: RunnerView) {
+  constructor(view: RunnerView, target: Hero) {
     super(view);
 
+    this.#target = target;
     this.gravitable = true;
 
     this.#state.set(ENTITY_STATES.JUMP, true);
@@ -71,8 +76,14 @@ export default class Runner extends Entity<RunnerView> implements IEntity {
   }
 
   update() {
-    this.#prevPoint.x = this.x;
-    this.#prevPoint.y = this.y;
+    this.superUpdate();
+
+    if (!this.isActive) {
+      if (this.x - this.#target.x < 512 + this.collisionBox.width * 2) {
+        this.isActive = true;
+      }
+      return;
+    }
 
     if (this.#Vy > 0) {
       if (this.#state.get(ENTITY_STATES.JUMP)) {
@@ -84,7 +95,7 @@ export default class Runner extends Entity<RunnerView> implements IEntity {
         this._view.heroSpriteState !== "jump"
       ) {
         // Random runner action near the edge
-        if (Math.random() > 0.5) {
+        if (Math.random() > this.jumpBehaviourKoef) {
           this._view.showFall();
         } else {
           this.jump();

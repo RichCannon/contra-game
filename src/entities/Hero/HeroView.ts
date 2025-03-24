@@ -55,6 +55,8 @@ export default class HeroView extends EntityView {
     this.#bounds.height = 90;
     this._collisionBox.width = this.#bounds.width;
     this._collisionBox.height = this.#bounds.height;
+    this._hitBox.width = this.#bounds.width;
+    this._hitBox.height = this.#bounds.height;
     this._rootNode.pivot.x = this._collisionBox.width * 0.5;
     this._rootNode.x = this._collisionBox.width * 0.5;
 
@@ -109,34 +111,66 @@ export default class HeroView extends EntityView {
   showStay() {
     this.#toState("stay");
     this.#setBulletPointShift(65, 30);
+    this._hitBox.width = 20;
+    this._hitBox.height = 90;
+    this._hitBox.shiftX = 0;
+    this._hitBox.shiftY = 0;
   }
   showStayUp() {
     this.#toState("stayUp");
     this.#setBulletPointShift(-2, -40);
+    this._hitBox.width = 20;
+    this._hitBox.height = 90;
+    this._hitBox.shiftX = 0;
+    this._hitBox.shiftY = 0;
   }
   showRun() {
     this.#toState("run");
     this.#setBulletPointShift(65, 30);
+    this._hitBox.width = 20;
+    this._hitBox.height = 90;
+    this._hitBox.shiftX = 0;
+    this._hitBox.shiftY = 0;
   }
   showRunUp() {
     this.#toState("runUp");
     this.#setBulletPointShift(40, -20);
+    this._hitBox.width = 20;
+    this._hitBox.height = 90;
+    this._hitBox.shiftX = 0;
+    this._hitBox.shiftY = 0;
   }
   showRunDown() {
     this.#toState("runDown");
     this.#setBulletPointShift(20, 55);
+    this._hitBox.width = 20;
+    this._hitBox.height = 90;
+    this._hitBox.shiftX = 0;
+    this._hitBox.shiftY = 0;
   }
   showLay() {
     this.#toState("lay");
     this.#setBulletPointShift(65, 70);
+    this._hitBox.width = 90;
+    this._hitBox.height = 20;
+    this._hitBox.shiftX = -45;
+    this._hitBox.shiftY = 70;
   }
   showJump() {
     this.#toState("jump");
     this.#setBulletPointShift(0, 30);
+    this._hitBox.width = 40;
+    this._hitBox.height = 40;
+    this._hitBox.shiftX = -10;
+    this._hitBox.shiftY = 25;
   }
   showFall() {
     this.#toState("fall");
     this.#setBulletPointShift(-2, 40);
+    this._hitBox.width = 20;
+    this._hitBox.height = 90;
+    this._hitBox.shiftX = 0;
+    this._hitBox.shiftY = 0;
   }
 
   flip(direction: -1 | 1) {

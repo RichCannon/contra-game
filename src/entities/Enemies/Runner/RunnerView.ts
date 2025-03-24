@@ -18,13 +18,6 @@ export default class RunnerView extends EntityView {
     height: 0,
   };
 
-  #collisionBox: ICollisionBox = {
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  };
-
   // State machine
   #stm = {
     currentState: "run" as RunnerViewStates,
@@ -35,21 +28,17 @@ export default class RunnerView extends EntityView {
     return this.#stm.currentState;
   }
 
-  get collisionBox() {
-    this.#collisionBox.x = this.x;
-    this.#collisionBox.y = this.y;
-    return this.#collisionBox;
-  }
-
   constructor() {
     super();
 
     this.#bounds.width = 20;
     this.#bounds.height = 90;
-    this.#collisionBox.width = this.#bounds.width;
-    this.#collisionBox.height = this.#bounds.height;
-    this._rootNode.pivot.x = this.#collisionBox.width * 0.5;
-    this._rootNode.x = this.#collisionBox.width * 0.5;
+    this._collisionBox.width = this.#bounds.width;
+    this._collisionBox.height = this.#bounds.height;
+    this._hitBox.width = this.#bounds.width;
+    this._hitBox.height = this.#bounds.height;
+    this._rootNode.pivot.x = this.collisionBox.width * 0.5;
+    this._rootNode.x = this.collisionBox.width * 0.5;
 
     this.#stm.states.run = this.#getRunImage();
     this.#stm.states.jump = this.#getJumpImage();

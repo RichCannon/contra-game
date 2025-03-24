@@ -1,5 +1,10 @@
 import EntityView from "./EntityView";
-import { ENTITIE_TYPES, IPrevEntityPoint } from "../types/entities.types";
+import { IEntityOptions, IPrevEntityPoint } from "../types/entities.types";
+
+const DEFAULT_OPTIONS: IEntityOptions = {
+  isDead: false,
+  isActive: false,
+};
 
 export default class Entity<T extends EntityView = EntityView> {
   _view: T;
@@ -8,12 +13,14 @@ export default class Entity<T extends EntityView = EntityView> {
     y: 0,
   };
   #isDead: boolean;
+  #isActive: boolean;
   #health = 1;
   #gravitable = false;
 
-  constructor(view: T, isDead = false) {
+  constructor(view: T, { isActive = false, isDead = false } = DEFAULT_OPTIONS) {
     this._view = view;
     this.#isDead = isDead;
+    this.#isActive = isActive;
   }
 
   get gravitable() {
@@ -50,6 +57,9 @@ export default class Entity<T extends EntityView = EntityView> {
   get collisionBox() {
     return this._view.collisionBox;
   }
+  get hitBox() {
+    return this._view.hitBox;
+  }
 
   get prevPoint() {
     return this.#prevPoint;
@@ -57,6 +67,13 @@ export default class Entity<T extends EntityView = EntityView> {
 
   get isDead() {
     return this.#isDead;
+  }
+  get isActive() {
+    return this.#isActive;
+  }
+
+  set isActive(value: boolean) {
+    this.#isActive = value;
   }
 
   kill() {

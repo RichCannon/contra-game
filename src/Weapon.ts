@@ -6,34 +6,50 @@ export const enum WEAPON_TYPES {
   SPREAD,
 }
 
+type CurrentGunStrategyType = (bulletContext: IBulletContext) => void;
+
 export default class Weapon {
-  #currentType: WEAPON_TYPES;
+  #currentGunStrategy: CurrentGunStrategyType;
   #bulletFactory: BulletFactory;
+
   constructor(bulletFactory: BulletFactory) {
     this.#bulletFactory = bulletFactory;
+    this.#currentGunStrategy = this.#defaultGunStrategy;
   }
 
   setWeapon(type: WEAPON_TYPES) {
-    this.#currentType = type;
+    switch (type) {
+      case WEAPON_TYPES.DEFAULT:
+        this.#currentGunStrategy = this.#defaultGunStrategy;
+        break;
+      case WEAPON_TYPES.SPREAD:
+        this.#currentGunStrategy = this.#spredGunStrategy;
+        break;
+
+      default:
+        this.#currentGunStrategy = this.#defaultGunStrategy;
+        break;
+    }
   }
 
-  fire() {}
+  fire(bulletContext: IBulletContext) {
+    this.#currentGunStrategy(bulletContext);
+  }
 
-  #defaultGun(bulletContext: IBulletContext) {
+  #defaultGunStrategy(bulletContext: IBulletContext) {
     this.#bulletFactory.create(bulletContext);
   }
-  #spredGun(bulletContext: IBulletContext) {
+  #spredGunStrategy(bulletContext: IBulletContext) {
     let angleShift = -20;
     const NUMBER_OF_BULLETS = 5;
-    const localBulletContext: IBulletContext = {
-      x: bulletContext.x,
-      y: bulletContext.y,
-      type: bulletContext.type,
-      angle: bulletContext.angle,
-    };
 
     for (let i = 0; i < NUMBER_OF_BULLETS; i++) {
-      localBulletContext.angle += angleShift;
+      const localBulletContext: IBulletContext = {
+        x: bulletContext.x,
+        y: bulletContext.y,
+        type: bulletContext.type,
+        angle: bulletContext.angle + angleShift,
+      };
       this.#bulletFactory.create(localBulletContext);
       angleShift += 10;
     }

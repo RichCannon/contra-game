@@ -42,7 +42,15 @@ export default class Turret extends Entity<TurretView> implements IEntity {
 
   update(): void {
     // this.superUpdate();
+
     if (this.#target.isDead) return;
+
+    if (!this.isActive) {
+      if (this.x - this.#target.x < 512 + this.collisionBox.width * 2) {
+        this.isActive = true;
+      }
+      return;
+    }
     const yDist = this.#target.y - this.y;
     const xDist = this.#target.x - this.x;
 

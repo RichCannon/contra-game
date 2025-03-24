@@ -1,6 +1,4 @@
-import { Container } from "pixi.js";
-import Platform from "../entities/Platforms/Platform";
-import { ICollisionBox, IEntity } from "../types/entities.types";
+import { ICollisionBox } from "../types/entities.types";
 
 export class Physics {
   static checkCollision(entity: ICollisionBox, area: ICollisionBox) {
@@ -13,7 +11,7 @@ export class Physics {
 
   static getOrientCollision(
     aaRect: ICollisionBox,
-    bbRect: Container,
+    bbRect: ICollisionBox,
     aaPrevPoint: { x: number; y: number }
   ) {
     const collision = {

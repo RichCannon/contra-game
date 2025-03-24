@@ -8,6 +8,13 @@ export interface ICollisionBox extends IEntityPosition {
   height: number;
 }
 
+export interface IHitBox extends IEntityPosition {
+  width: number;
+  height: number;
+  shiftX: number;
+  shiftY: number;
+}
+
 export const enum ENTITY_STATES {
   STAY,
   JUMP,
@@ -24,11 +31,12 @@ export interface IEntity {
   state: Map<ENTITY_STATES, boolean>;
   gravitable: boolean;
   readonly collisionBox: ICollisionBox;
+  readonly hitBox: IHitBox;
   readonly isDead: boolean;
   readonly prevPoint: IPrevEntityPoint;
   kill(): void;
   dealDamage(): void;
-  update(): void;
+  update?(): void;
   stay?(y: number): void;
   removeFromParent(): void;
 }
@@ -39,4 +47,13 @@ export const enum ENTITIE_TYPES {
   ENEMY_TURRET,
   BULLET,
   ENEMY_BULLET,
+  PLATFORM,
+  BOX,
+  WATER,
+  BOSS_WALL,
+}
+
+export interface IEntityOptions {
+  isDead?: boolean;
+  isActive?: boolean;
 }

@@ -1,43 +1,25 @@
-import { Container, Graphics } from "pixi.js";
+import { Graphics } from "pixi.js";
+import Entity from "../Entity";
+import PlatformView from "./PlatformView";
+import { ENTITIE_TYPES, IEntity } from "../../types/entities.types";
 
 export const enum PlatformType {
   PLATFORM,
   BOX,
 }
-export default class Platform extends Container {
-  private platform: Graphics;
-  #type: PlatformType;
+export default class Platform extends Entity implements IEntity {
   #isClimable = false;
-
-  get type() {
-    return this.#type;
-  }
+  type: ENTITIE_TYPES;
 
   get isClimable() {
     return this.#isClimable;
   }
-  set setIsClimable(isClimable: boolean) {
+  set isClimable(isClimable: boolean) {
     this.#isClimable = isClimable;
   }
 
-  constructor(
-    platformType: PlatformType = PlatformType.PLATFORM,
-    isClimable = false
-  ) {
-    super();
-    this.#isClimable = isClimable;
-    this.#type = platformType;
-    this.platform = new Graphics();
-    this.platform.rect(0, 0, 200, 30);
-    // view.fill(0xffff55);
-    this.platform.setStrokeStyle({
-      color: 0xff99ff,
-      width: 1,
-    });
-    if (this.#type === PlatformType.BOX) {
-      this.platform.lineTo(200, 30);
-    }
-    this.platform.stroke();
-    this.addChild(this.platform);
+  constructor(view: PlatformView, type = ENTITIE_TYPES.PLATFORM) {
+    super(view);
+    this.type = type;
   }
 }

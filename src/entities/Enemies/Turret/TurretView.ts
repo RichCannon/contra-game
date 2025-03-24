@@ -1,6 +1,6 @@
 import { Graphics } from "pixi.js";
 import EntityView from "../../EntityView";
-import { ICollisionBox } from "../../../types/entities.types";
+import { ICollisionBox, IHitBox } from "../../../types/entities.types";
 
 const RADIUS = 60;
 const GUN_W = 100;
@@ -23,6 +23,17 @@ export default class TurretView extends EntityView {
       y: this.y - RADIUS,
       width: RADIUS * 2,
       height: RADIUS * 2,
+    };
+  }
+
+  get hitBox(): IHitBox {
+    return {
+      x: this.x - RADIUS,
+      y: this.y - RADIUS,
+      width: RADIUS * 2,
+      height: RADIUS * 2,
+      shiftX: 0,
+      shiftY: 0,
     };
   }
 
