@@ -1,5 +1,6 @@
 import { Container } from "pixi.js";
 import { ICollisionBox, IHitBox } from "../types/entities.types";
+import AssetsFactory from "../AssetsFactory";
 
 export default class EntityView extends Container {
   _rootNode: Container;
@@ -10,6 +11,8 @@ export default class EntityView extends Container {
     y: 0,
   };
 
+  #assets: AssetsFactory;
+
   _hitBox: IHitBox = {
     height: 0,
     width: 0,
@@ -19,8 +22,9 @@ export default class EntityView extends Container {
     shiftY: 0,
   };
 
-  constructor() {
+  constructor(assets: AssetsFactory) {
     super();
+    this.#assets = assets;
     this._rootNode = this.#createNodeStructure();
   }
 
@@ -30,6 +34,9 @@ export default class EntityView extends Container {
     return rootNode;
   }
 
+  get assets() {
+    return this.#assets;
+  }
   get collisionBox() {
     this._collisionBox.x = this.x;
     this._collisionBox.y = this.y;

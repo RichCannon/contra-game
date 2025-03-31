@@ -7,6 +7,7 @@ import {
 import GravityManager from "../../../engine/GravityManager";
 import Entity from "../../Entity";
 import Hero from "../../Hero/Hero";
+import { CONTROL_KEYBOARD_KEYS } from "../../../utils/settings";
 
 let showLog = true;
 
@@ -123,8 +124,8 @@ export default class Runner extends Entity<RunnerView> implements IEntity {
       this.#state.get(ENTITY_STATES.JUMP)
     ) {
       const buttonState = new Map<string, boolean>();
-      buttonState.set("ArrowLeft", this.#movement.xL === -1);
-      buttonState.set("ArrowRight", this.#movement.xR === 1);
+      buttonState.set(CONTROL_KEYBOARD_KEYS.RUN_LEFT, this.#movement.xL === -1);
+      buttonState.set(CONTROL_KEYBOARD_KEYS.RUN_RIGHT, this.#movement.xR === 1);
       this.#state.set(ENTITY_STATES.IN_AIR, false);
       this.setView(buttonState);
     }
@@ -156,7 +157,10 @@ export default class Runner extends Entity<RunnerView> implements IEntity {
       return;
     }
 
-    if (state.get("ArrowLeft") || state.get("ArrowRight")) {
+    if (
+      state.get(CONTROL_KEYBOARD_KEYS.RUN_LEFT) ||
+      state.get(CONTROL_KEYBOARD_KEYS.RUN_RIGHT)
+    ) {
       this._view.showRun();
     }
   }

@@ -11,11 +11,13 @@ import BulletFactory from "../../Bullet/BulletFactory";
 import { IBulletContext } from "../../../types/bullets.types";
 
 export default class Turret extends Entity<TurretView> implements IEntity {
-  #state: Map<ENTITY_STATES, boolean> = new Map();
   type: ENTITIE_TYPES = ENTITIE_TYPES.ENEMY_TURRET;
+
+  #state: Map<ENTITY_STATES, boolean> = new Map();
   #target: Hero;
   #bulletFactory: BulletFactory;
-  #timeCounter = 0;
+  #cooldown = 1000;
+  #lastFired = 0;
 
   #box = new Graphics();
 
@@ -67,11 +69,11 @@ export default class Turret extends Entity<TurretView> implements IEntity {
   }
 
   #fire(rotationInRad: number) {
-    this.#timeCounter++;
-    if (this.#timeCounter < 100) {
+    const now = +new Date();
+    if (now - this.#lastFired < this.#cooldown) {
       return;
     }
-    this.#timeCounter = 0;
+    this.#lastFired = now;
     const bulletContext: IBulletContext = {
       type: ENTITIE_TYPES.ENEMY_BULLET,
       x: this.x,
@@ -79,6 +81,6 @@ export default class Turret extends Entity<TurretView> implements IEntity {
       angle: (rotationInRad * 180) / Math.PI,
     };
 
-    this.#bulletFactory.create(bulletContext);
+    this.#bulletFactory.createDefault(bulletContext);
   }
 }

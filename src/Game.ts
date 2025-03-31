@@ -1,4 +1,4 @@
-import { Application, Renderer } from "pixi.js";
+import { Application, Renderer, Ticker } from "pixi.js";
 import Hero from "./entities/Hero/Hero";
 import { Keyboard } from "./engine/Keyboard";
 import PlatformFactory from "./entities/Platforms/PlatformFactory";
@@ -12,6 +12,8 @@ import Weapon, { WEAPON_TYPES } from "./Weapon";
 import World from "./WorldContainer";
 import SceneFactory from "./SceneFactory";
 import { EnemiesFactory } from "./entities/Enemies/EnemiesFactory";
+import type AssetsFactory from "./AssetsFactory";
+import { CONTROL_KEYBOARD_KEYS } from "./utils/settings";
 
 export default class Game {
   #pixiApp: Application<Renderer>;
@@ -27,7 +29,7 @@ export default class Game {
   #camera: Camera;
   #weapon: Weapon;
 
-  constructor(pixiApp: Application<Renderer>) {
+  constructor(pixiApp: Application<Renderer>, assets: AssetsFactory) {
     //TODO: Refactor constructor. Split code into methods. (Camera, Hero, PlatformFactory, BulletFactory)
     this.#worldContainer = new World();
     pixiApp.stage.addChild(this.#worldContainer);
@@ -38,12 +40,13 @@ export default class Game {
 
     const heroFactory = new HeroFactory(
       this.#worldContainer.game,
-      this.#entities
+      this.#entities,
+      assets
     );
 
     this.#hero = heroFactory.create(160, 100);
 
-    this.#platformFactory = new PlatformFactory(this.#worldContainer);
+    this.#platformFactory = new PlatformFactory(this.#worldContainer, assets);
 
     this.#bulletFactory = new BulletFactory(
       this.#worldContainer.game,
@@ -54,7 +57,8 @@ export default class Game {
       this.#worldContainer,
       this.#entities,
       this.#hero,
-      this.#bulletFactory
+      this.#bulletFactory,
+      assets
     );
 
     this.#sceneFactory = new SceneFactory(
@@ -85,27 +89,38 @@ export default class Game {
   #setKeys() {
     Keyboard.init();
 
-    Keyboard.addKeyDownListener("move", (e, state) => {
-      if (state.get("KeyZ")) {
-        if (this.#hero.isDead) return;
+    Keyboard.addKeyDownListener("fire", (_, state) => {
+      if (this.#hero.isDead) return;
+      if (state.get(CONTROL_KEYBOARD_KEYS.FIRE)) {
         this.#weapon.fire(this.#hero.bulletContext);
       }
+    });
+    Keyboard.addKeyUpListener("stopFire", (_, state) => {
+      if (this.#hero.isDead) return;
+      if (!state.get(CONTROL_KEYBOARD_KEYS.FIRE)) {
+        this.#hero.setView(state);
+      }
+    });
 
-      if (state.get("ArrowLeft")) {
+    Keyboard.addKeyDownListener("move", (e, state) => {
+      if (state.get(CONTROL_KEYBOARD_KEYS.RUN_LEFT)) {
         this.#hero.startLeftMove();
       }
-      if (state.get("ArrowRight")) {
+      if (state.get(CONTROL_KEYBOARD_KEYS.RUN_RIGHT)) {
         this.#hero.startRightMove();
       }
-      // if (state.get("ArrowDown")) {
+      // if (state.get(CONTROL_KEYBOARD_KEYS.LAY)) {
       // }
-      // if (state.get("ArrowUp")) {
+      // if (state.get(CONTROL_KEYBOARD_KEYS.LOOK_UP)) {
       // }
 
-      if (state.get("KeyX")) {
+      if (state.get(CONTROL_KEYBOARD_KEYS.JUMP)) {
         if (
-          state.get("ArrowDown") &&
-          !(state.get("ArrowLeft") || state.get("ArrowRight"))
+          state.get(CONTROL_KEYBOARD_KEYS.LAY) &&
+          !(
+            state.get(CONTROL_KEYBOARD_KEYS.RUN_LEFT) ||
+            state.get(CONTROL_KEYBOARD_KEYS.RUN_RIGHT)
+          )
         ) {
           this.#hero.jumpDown();
           return;
@@ -113,27 +128,27 @@ export default class Game {
         this.#hero.jump();
       }
       if (
-        state.get("ArrowDown") ||
-        state.get("ArrowUp") ||
-        state.get("ArrowLeft") ||
-        state.get("ArrowRight")
+        state.get(CONTROL_KEYBOARD_KEYS.LAY) ||
+        state.get(CONTROL_KEYBOARD_KEYS.LOOK_UP) ||
+        state.get(CONTROL_KEYBOARD_KEYS.RUN_LEFT) ||
+        state.get(CONTROL_KEYBOARD_KEYS.RUN_RIGHT)
       ) {
         this.#hero.setView(state);
       }
     });
 
     Keyboard.addKeyUpListener("stopMove", (e, state) => {
-      if (!state.get("ArrowRight")) {
+      if (!state.get(CONTROL_KEYBOARD_KEYS.RUN_RIGHT)) {
         this.#hero.stopMoveRight();
       }
-      if (!state.get("ArrowLeft")) {
+      if (!state.get(CONTROL_KEYBOARD_KEYS.RUN_LEFT)) {
         this.#hero.stopMoveLeft();
       }
       if (
-        e.code === "ArrowDown" ||
-        e.code === "ArrowUp" ||
-        e.code === "ArrowLeft" ||
-        e.code === "ArrowRight"
+        e.code === CONTROL_KEYBOARD_KEYS.LAY ||
+        e.code === CONTROL_KEYBOARD_KEYS.LOOK_UP ||
+        e.code === CONTROL_KEYBOARD_KEYS.RUN_LEFT ||
+        e.code === CONTROL_KEYBOARD_KEYS.RUN_RIGHT
       ) {
         this.#hero.setView(state);
       }
@@ -175,26 +190,6 @@ export default class Game {
         character.x = prevPoint.x;
       }
     }
-  }
-
-  update() {
-    for (let i = 0; i < this.#entities.length; i++) {
-      const entity = this.#entities[i];
-      if (entity.update) entity.update();
-
-      if (
-        entity.type === ENTITIE_TYPES.HERO ||
-        entity.type === ENTITIE_TYPES.ENEMY ||
-        entity.type === ENTITIE_TYPES.ENEMY_TURRET
-      ) {
-        this.#checkDamage(entity);
-        this.#checkPlatforms(entity);
-      }
-
-      this.#checkEntityStatus(entity, i);
-    }
-
-    this.#camera.update();
   }
 
   #checkDamage(entity: IEntity) {
@@ -282,5 +277,25 @@ export default class Game {
       }
       this.#entities.splice(idx, 1);
     }
+  }
+
+  update(ticker: Ticker) {
+    for (let i = 0; i < this.#entities.length; i++) {
+      const entity = this.#entities[i];
+      if (entity.update) entity.update(ticker);
+
+      if (
+        entity.type === ENTITIE_TYPES.HERO ||
+        entity.type === ENTITIE_TYPES.ENEMY ||
+        entity.type === ENTITIE_TYPES.ENEMY_TURRET
+      ) {
+        this.#checkDamage(entity);
+        this.#checkPlatforms(entity);
+      }
+
+      this.#checkEntityStatus(entity, i);
+    }
+
+    this.#camera.update();
   }
 }

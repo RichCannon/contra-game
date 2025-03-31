@@ -3,11 +3,15 @@ import Entity from "../Entity";
 import BulletView from "./BulletView";
 
 export default class Bullet extends Entity<BulletView> implements IEntity {
-  #SPEED = 8;
+  speed = 8;
   #cosRadX: number;
   #sinRadY: number;
 
   type: ENTITIE_TYPES = ENTITIE_TYPES.BULLET;
+
+  // get speed() {
+  //   return this.speed;
+  // }
 
   constructor(view: BulletView, angle: number) {
     super(view);
@@ -21,7 +25,7 @@ export default class Bullet extends Entity<BulletView> implements IEntity {
   }
 
   update() {
-    this.x += this.#SPEED * this.#cosRadX;
-    this.y += this.#SPEED * this.#sinRadY;
+    this.x += this.speed * this.#cosRadX;
+    this.y += this.speed * this.#sinRadY;
   }
 }

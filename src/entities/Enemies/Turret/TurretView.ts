@@ -1,13 +1,14 @@
-import { Graphics } from "pixi.js";
+import { Graphics, Sprite } from "pixi.js";
 import EntityView from "../../EntityView";
 import { ICollisionBox, IHitBox } from "../../../types/entities.types";
+import AssetsFactory from "../../../AssetsFactory";
 
 const RADIUS = 60;
 const GUN_W = 100;
 const GUN_H = 20;
 
 export default class TurretView extends EntityView {
-  #gunView: Graphics;
+  #gunView: Sprite;
 
   get gunRotation() {
     return this.#gunView.rotation;
@@ -37,29 +38,22 @@ export default class TurretView extends EntityView {
     };
   }
 
-  constructor() {
-    super();
+  constructor(assets: AssetsFactory) {
+    super(assets);
 
-    const view = new Graphics();
+    const view = new Sprite(this.assets.getTexture("tourelle0000"));
+    view.scale._x = 1.4;
+    view.scale._y = 1.4;
+    view.x -= view.width * 0.5;
+    view.y -= view.height * 0.5;
 
-    view.circle(0, 0, RADIUS);
-    view.setStrokeStyle({
-      color: 0xff0000,
-      width: 2,
-    });
-    view.stroke();
+    this.addChild(view);
+    this.#gunView = new Sprite(this.assets.getTexture("tourellegun0000"));
+    // this.#gunView.x = view.width * 0.5;
+    // this.#gunView.y = view.height * 0.5;
+    this.#gunView.pivot.x = GUN_H;
+    this.#gunView.pivot.y = GUN_H;
 
-    this.#gunView = new Graphics();
-    this.#gunView.setStrokeStyle({
-      color: 0xff0000,
-      width: 2,
-    });
-    this.#gunView.rect(0, 0, GUN_W, GUN_H);
-    this.#gunView.pivot.x = GUN_H * 0.5;
-    this.#gunView.pivot.y = GUN_H * 0.5;
-    this.#gunView.stroke();
-
-    this._rootNode.addChild(this.#gunView);
-    this._rootNode.addChild(view);
+    this.addChild(this.#gunView);
   }
 }

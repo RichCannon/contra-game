@@ -1,12 +1,14 @@
-import { Graphics } from "pixi.js";
+import { Container, Graphics, Sprite } from "pixi.js";
 import type World from "../../WorldContainer";
 import Platform from "./Platform";
 import PlatformView from "./PlatformView";
 import { ENTITIE_TYPES } from "../../types/entities.types";
 import BridgePlatform from "./BridgePlatform";
+import AssetsFactory from "../../AssetsFactory";
 
 export default class PlatformFactory {
   #worldContainer: World;
+  #assets: AssetsFactory;
 
   #platformsArr: Platform[] = [];
   #platformWidth = 128;
@@ -24,29 +26,13 @@ export default class PlatformFactory {
     this.#platformsArr = [...this.#platformsArr, newPlatforms];
   }
 
-  constructor(worldContainer: World) {
+  constructor(worldContainer: World, assets: AssetsFactory) {
     this.#worldContainer = worldContainer;
+    this.#assets = assets;
   }
 
   public createPlatform(x: number, y: number) {
-    const skin = new Graphics();
-    skin.rect(0, 0, this.#platformWidth, this.#platformHeight);
-    skin.fill(0x00ff00);
-
-    skin.rect(
-      0,
-      this.#platformHeight,
-      this.#platformWidth,
-      this.#platformHeight * 20
-    );
-    skin.fill(0x694216);
-
-    skin.setStrokeStyle({
-      color: 0x004220,
-      width: 1,
-    });
-    skin.stroke();
-
+    const skin = this.#getGroundPlatform();
     const view = new PlatformView(this.#platformWidth, this.#platformHeight);
     view.addChild(skin);
 
@@ -58,24 +44,7 @@ export default class PlatformFactory {
     this.addPlatform(platform);
   }
   public createBox(x: number, y: number, isClimable = false) {
-    const skin = new Graphics();
-    skin.rect(0, 0, this.#platformWidth, this.#platformHeight);
-    skin.fill(0x00ff00);
-
-    skin.rect(
-      0,
-      this.#platformHeight,
-      this.#platformWidth,
-      this.#platformHeight * 20
-    );
-    skin.fill(0x694216);
-
-    skin.lineTo(this.#platformWidth, this.#platformHeight);
-    skin.setStrokeStyle({
-      color: 0x004220,
-      width: 1,
-    });
-    skin.stroke();
+    const skin = this.#getGroundPlatform();
 
     const view = new PlatformView(this.#platformWidth, this.#platformHeight);
     view.addChild(skin);
@@ -93,16 +62,8 @@ export default class PlatformFactory {
     this.createBox(x, y, true);
   }
   public createWater(x: number, y: number) {
-    const skin = new Graphics();
-    //  -this.#platformHeight - This is water so it should cover hero/enemy model a little
-    skin.rect(
-      0,
-      -this.#platformHeight,
-      this.#platformWidth,
-      this.#platformHeight
-    );
-    skin.fill(0x00ffff);
-
+    const skin = new Sprite(this.#assets.getTexture("water0000"));
+    skin.y -= skin.height - 1;
     const view = new PlatformView(this.#platformWidth, this.#platformHeight);
     view.addChild(skin);
 
@@ -116,34 +77,22 @@ export default class PlatformFactory {
   public createBossWall(x: number, y: number) {
     const width = this.#platformWidth * 3;
     const heigth = 768;
-    const skin = new Graphics();
-    skin.rect(0, 0, width, heigth - 168);
-    skin.fill(0x0b1e0f2);
-    skin.setStrokeStyle({
-      color: 0x0000ff,
-      width: 1,
-    });
-    skin.stroke();
+    const skin = new Sprite(this.#assets.getTexture("boss0000"));
+    skin.scale.x = 1.5;
+    skin.scale.y = 1.5;
 
     const view = new PlatformView(width, heigth);
     view.addChild(skin);
 
     const platform = new Platform(view, ENTITIE_TYPES.BOX);
-    platform.x = x;
-    platform.y = y;
+    platform.x = x - 64;
+    platform.y = y - 45;
 
     this.#worldContainer.background.addChild(view);
     this.addPlatform(platform);
   }
   public createBridge(x: number, y: number) {
-    const skin = new Graphics();
-    skin.rect(0, 0, this.#platformWidth, this.#platformHeight * 3);
-    skin.fill(0xffffff);
-    skin.setStrokeStyle({
-      color: 0x111111,
-      width: 1,
-    });
-    skin.stroke();
+    const skin = new Sprite(this.#assets.getTexture("bridge0000"));
 
     const view = new PlatformView(
       this.#platformWidth,
@@ -158,5 +107,23 @@ export default class PlatformFactory {
     this.#worldContainer.background.addChild(view);
     this.addPlatform(platform);
     return platform;
+  }
+
+  #getGroundPlatform() {
+    const container = new Container();
+    const grass = new Sprite(this.#assets.getTexture("platform0000"));
+    const ground = new Sprite(this.#assets.getTexture("ground0000"));
+    ground.y = grass.height - 1;
+    const ground2 = new Sprite(this.#assets.getTexture("ground0000"));
+    ground2.y = grass.height * 2 - 2;
+    const ground3 = new Sprite(this.#assets.getTexture("ground0000"));
+    ground3.y = grass.height * 3 - 4;
+
+    container.addChild(grass);
+    container.addChild(ground);
+    container.addChild(ground2);
+    container.addChild(ground3);
+
+    return container;
   }
 }

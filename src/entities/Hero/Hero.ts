@@ -7,6 +7,7 @@ import {
 } from "../../types/entities.types";
 import GravityManager from "../../engine/GravityManager";
 import Entity from "../Entity";
+import { CONTROL_KEYBOARD_KEYS } from "../../utils/settings";
 
 export default class Hero extends Entity<HeroView> implements IEntity {
   #Vx = 0; // Velocity OX
@@ -85,10 +86,10 @@ export default class Hero extends Entity<HeroView> implements IEntity {
       this.#state.get(ENTITY_STATES.JUMP)
     ) {
       const buttonState = new Map<string, boolean>();
-      buttonState.set("ArrowLeft", this.#movement.xL === -1);
-      buttonState.set("ArrowRight", this.#movement.xR === 1);
-      buttonState.set("ArrowDown", this.#isLay);
-      buttonState.set("ArrowUp", this.#isUp);
+      buttonState.set(CONTROL_KEYBOARD_KEYS.RUN_LEFT, this.#movement.xL === -1);
+      buttonState.set(CONTROL_KEYBOARD_KEYS.RUN_RIGHT, this.#movement.xR === 1);
+      buttonState.set(CONTROL_KEYBOARD_KEYS.LAY, this.#isLay);
+      buttonState.set(CONTROL_KEYBOARD_KEYS.LOOK_UP, this.#isUp);
       this.#state.set(ENTITY_STATES.IN_AIR, false);
       this.setView(buttonState);
     }
@@ -132,8 +133,8 @@ export default class Hero extends Entity<HeroView> implements IEntity {
 
   setView(state: Map<string, boolean>) {
     const movementDirection = this.#movement.xL + this.#movement.xR;
-    this.#isLay = state.get("ArrowDown") || false;
-    this.#isUp = state.get("ArrowUp") || false;
+    this.#isLay = state.get(CONTROL_KEYBOARD_KEYS.LAY) || false;
+    this.#isUp = state.get(CONTROL_KEYBOARD_KEYS.LOOK_UP) || false;
 
     if (!!movementDirection) {
       this._view.flip(movementDirection as -1 | 1);
@@ -148,27 +149,34 @@ export default class Hero extends Entity<HeroView> implements IEntity {
       return;
     }
 
-    if (state.get("ArrowLeft") || state.get("ArrowRight")) {
-      if (state.get("ArrowUp")) {
+    if (
+      state.get(CONTROL_KEYBOARD_KEYS.RUN_LEFT) ||
+      state.get(CONTROL_KEYBOARD_KEYS.RUN_RIGHT)
+    ) {
+      if (state.get(CONTROL_KEYBOARD_KEYS.LOOK_UP)) {
         this._view.showRunUp();
-      } else if (state.get("ArrowDown")) {
+      } else if (state.get(CONTROL_KEYBOARD_KEYS.LAY)) {
         this._view.showRunDown();
       } else {
-        this._view.showRun();
+        if (state.get(CONTROL_KEYBOARD_KEYS.FIRE)) {
+          this._view.showRunShoot();
+        } else {
+          this._view.showRun();
+        }
       }
     } else {
-      if (state.get("ArrowUp")) {
+      if (state.get(CONTROL_KEYBOARD_KEYS.LOOK_UP)) {
         this._view.showStayUp();
-      } else if (state.get("ArrowDown")) {
+      } else if (state.get(CONTROL_KEYBOARD_KEYS.LAY)) {
         this._view.showLay();
       } else {
         this._view.showStay();
       }
     }
 
-    // if (state.get("ArrowDown")) {
+    // if (state.get(CONTROL_KEYBOARD_KEYS.LAY)) {
     // }
-    // if (state.get("ArrowUp")) {
+    // if (state.get(CONTROL_KEYBOARD_KEYS.LOOK_UP)) {
     // }
 
     // if (state.get("KeyX")) {

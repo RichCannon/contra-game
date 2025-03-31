@@ -10,12 +10,6 @@ export default class BulletView extends EntityView {
     this._hitBox.width = this._collisionBox.width;
     this._hitBox.height = this._collisionBox.height;
 
-    view.rect(0, 0, this.collisionBox.width, this.collisionBox.height);
-    view.setStrokeStyle({
-      color: 0xff9900,
-      width: 2,
-    });
-    view.stroke();
     this.addChild(view);
   }
 }

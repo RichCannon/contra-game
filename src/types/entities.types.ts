@@ -1,3 +1,5 @@
+import { Ticker } from "pixi.js";
+
 export interface IEntityPosition {
   x: number;
   y: number;
@@ -36,7 +38,7 @@ export interface IEntity {
   readonly prevPoint: IPrevEntityPoint;
   kill(): void;
   dealDamage(): void;
-  update?(): void;
+  update?(ticker: Ticker): void;
   stay?(y: number): void;
   removeFromParent(): void;
 }

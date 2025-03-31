@@ -1,6 +1,7 @@
-import { Graphics } from "pixi.js";
+import { AnimatedSprite, Container, Graphics, Sprite } from "pixi.js";
 import EntityView from "../../EntityView";
 import { ICollisionBox } from "../../../types/entities.types";
+import AssetsFactory from "../../../AssetsFactory";
 
 export type RunnerViewStates =
   | "stay"
@@ -21,15 +22,15 @@ export default class RunnerView extends EntityView {
   // State machine
   #stm = {
     currentState: "run" as RunnerViewStates,
-    states: {} as Record<RunnerViewStates, Graphics>,
+    states: {} as Record<RunnerViewStates, Container>,
   };
 
   get heroSpriteState() {
     return this.#stm.currentState;
   }
 
-  constructor() {
-    super();
+  constructor(assets: AssetsFactory) {
+    super(assets);
 
     this.#bounds.width = 20;
     this.#bounds.height = 90;
@@ -88,43 +89,22 @@ export default class RunnerView extends EntityView {
   }
 
   #getRunImage() {
-    const view = new Graphics();
-
-    view.rect(0, 0, this.#bounds.width, this.#bounds.height);
-    view.skew.set(-0.1, 0);
-    view.setStrokeStyle({
-      color: 0xff0000,
-      width: 2,
-    });
-    view.stroke();
+    const view = new AnimatedSprite(
+      this.assets.getAnimationTextures("runnerrun")
+    );
+    view.animationSpeed = 0.1;
+    view.play();
+    view.y += 2;
     return view;
   }
 
   #getJumpImage() {
-    const view = new Graphics();
-
-    view.rect(0, 0, 40, 40);
-    view.x -= 10;
-    view.y += 25;
-    view.setStrokeStyle({
-      color: 0xff0000,
-      width: 2,
-    });
-    view.stroke();
+    const view = new Sprite(this.assets.getTexture("runnerjump0000"));
     return view;
   }
 
   #getFallImage() {
-    const view = new Graphics();
-
-    view.rect(0, 0, this.#bounds.width, this.#bounds.height);
-    view.rect(10, 20, 5, 60);
-    view.skew.set(-0.1, 0);
-    view.setStrokeStyle({
-      color: 0xff0000,
-      width: 2,
-    });
-    view.stroke();
+    const view = new Sprite(this.assets.getTexture("runnerjump0000"));
     return view;
   }
 }
